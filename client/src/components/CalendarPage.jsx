@@ -5,6 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { api } from '../api.js';
+import ChoreForm from './ChoreForm.jsx';
 
 function EventContent({ eventInfo }) {
   const { completed, assignee_name } = eventInfo.event.extendedProps;
@@ -70,11 +71,17 @@ export default function CalendarPage() {
   const calendarRef = useRef(null);
   const [window, setWindow] = useState({ start: '', end: '' });
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [choreModal, setChoreModal] = useState(null); // null | { start_date: string }
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['calendar', window.start, window.end],
     queryFn: () => api.getCalendar(window.start, window.end),
     enabled: !!(window.start && window.end),
+  });
+
+  const { data: members = [] } = useQuery({
+    queryKey: ['members'],
+    queryFn: api.getMembers,
   });
 
   const toggleCompletion = useMutation({
@@ -87,6 +94,16 @@ export default function CalendarPage() {
     onError: (err) => alert(err.message),
   });
 
+  const createChore = useMutation({
+    mutationFn: (payload) => api.createChore(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['chores'] });
+      qc.invalidateQueries({ queryKey: ['calendar'] });
+      setChoreModal(null);
+    },
+    onError: (err) => alert(err.message),
+  });
+
   const handleDatesSet = useCallback(({ startStr, endStr }) => {
     // FullCalendar gives ISO datetime strings; slice to date only
     setWindow({ start: startStr.slice(0, 10), end: endStr.slice(0, 10) });
@@ -94,6 +111,10 @@ export default function CalendarPage() {
 
   const handleEventClick = useCallback(({ event }) => {
     setSelectedEvent(event);
+  }, []);
+
+  const handleDateClick = useCallback(({ dateStr }) => {
+    setChoreModal({ start_date: dateStr.slice(0, 10) });
   }, []);
 
   const styledEvents = events.map((ev) => ({
@@ -119,6 +140,7 @@ export default function CalendarPage() {
         events={styledEvents}
         datesSet={handleDatesSet}
         eventClick={handleEventClick}
+        dateClick={handleDateClick}
         eventContent={(eventInfo) => <EventContent eventInfo={eventInfo} />}
         height="auto"
       />
@@ -133,6 +155,33 @@ export default function CalendarPage() {
           isToggling={toggleCompletion.isPending}
         />
       )}
+
+      {choreModal && (
+        <Modal title="Add chore" onClose={() => setChoreModal(null)}>
+          <ChoreForm
+            key={choreModal.start_date}
+            chore={null}
+            initialValues={choreModal}
+            members={members}
+            onSave={(payload) => createChore.mutate(payload)}
+            onCancel={() => setChoreModal(null)}
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+        <div className="px-6 py-5">{children}</div>
+      </div>
     </div>
   );
 }

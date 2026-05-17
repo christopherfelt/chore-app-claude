@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db');
+const { broadcast } = require('./sse');
 
 const router = express.Router();
 
@@ -52,6 +53,7 @@ router.post('/', (req, res) => {
     JOIN team_members m ON m.id = c.assignee_id WHERE c.id = ?
   `).get(result.lastInsertRowid);
 
+  broadcast('chores');
   res.status(201).json(deserialize(chore));
 });
 
@@ -75,12 +77,14 @@ router.put('/:id', (req, res) => {
     JOIN team_members m ON m.id = c.assignee_id WHERE c.id = ?
   `).get(req.params.id);
 
+  broadcast('chores');
   res.json(deserialize(chore));
 });
 
 router.delete('/:id', (req, res) => {
   const result = db.prepare('DELETE FROM chores WHERE id = ?').run(req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Chore not found' });
+  broadcast('chores');
   res.status(204).send();
 });
 

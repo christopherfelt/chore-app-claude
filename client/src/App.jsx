@@ -2,6 +2,7 @@ import { BrowserRouter, NavLink, Routes, Route } from 'react-router-dom';
 import CalendarPage from './components/CalendarPage.jsx';
 import ChoresPage from './components/ChoresPage.jsx';
 import MembersPage from './components/MembersPage.jsx';
+import { useSync } from './hooks/useSync.js';
 
 function Nav() {
   const linkClass = ({ isActive }) =>
@@ -19,6 +20,7 @@ function Nav() {
 }
 
 export default function App() {
+  useSync();
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 flex flex-col">

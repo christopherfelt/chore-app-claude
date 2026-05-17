@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -13,12 +13,10 @@ const empty = {
   recurrence_day_of_month: 1,
 };
 
-export default function ChoreForm({ chore, members, onSave, onCancel }) {
-  const [form, setForm] = useState(empty);
-
-  useEffect(() => {
+export default function ChoreForm({ chore, members, onSave, onCancel, initialValues = {} }) {
+  const [form, setForm] = useState(() => {
     if (chore) {
-      setForm({
+      return {
         title: chore.title || '',
         description: chore.description || '',
         assignee_id: String(chore.assignee_id || ''),
@@ -27,11 +25,10 @@ export default function ChoreForm({ chore, members, onSave, onCancel }) {
         recurrence_type: chore.recurrence_type || 'none',
         recurrence_days: chore.recurrence_type === 'weekly' ? (chore.recurrence_days || []) : [],
         recurrence_day_of_month: chore.recurrence_type === 'monthly' ? (chore.recurrence_days || 1) : 1,
-      });
-    } else {
-      setForm(empty);
+      };
     }
-  }, [chore]);
+    return { ...empty, ...initialValues };
+  });
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 

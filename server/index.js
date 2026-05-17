@@ -6,6 +6,7 @@ const membersRouter = require('./routes/members');
 const choresRouter = require('./routes/chores');
 const calendarRouter = require('./routes/calendar');
 const completionsRouter = require('./routes/completions');
+const { router: sseRouter } = require('./routes/sse');
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use('/api/members', membersRouter);
 app.use('/api/chores', choresRouter);
 app.use('/api/calendar', calendarRouter);
 app.use('/api/completions', completionsRouter);
+app.use('/api/events', sseRouter);
 
 // Serve built client in production
 const clientDist = path.join(__dirname, '../client/dist');

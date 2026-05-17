@@ -141,6 +141,7 @@ export default function ChoresPage() {
       {modal !== null && (
         <Modal title={modal && modal.id ? 'Edit chore' : 'Add chore'} onClose={() => setModal(null)}>
           <ChoreForm
+            key={modal && modal.id ? modal.id : 'new'}
             chore={modal === 'add' ? null : modal}
             members={members}
             onSave={handleSave}
